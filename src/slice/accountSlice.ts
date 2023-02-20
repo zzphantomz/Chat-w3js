@@ -31,7 +31,7 @@ const connectWallet = (provider:any) => {
 
 export const connectAccount = createAsyncThunk(
   'accounts/connect',
-  async (walletType, { dispatch }) => {
+  async (walletType:string, { dispatch }) => {
     const providerForWalletType = async (walletType:string) => {
       switch (walletType) {
       case 'metamask':
