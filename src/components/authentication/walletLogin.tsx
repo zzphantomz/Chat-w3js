@@ -11,10 +11,8 @@ export const WalletLogin: FC = (props) => {
 
   const dispatch = useDispatch()
 
-    console.log('account', account)
   function onWalletListItemClick(walletName: string) {
     return () => {
-      // @ts-ignore
       dispatch(connectAccount(walletName))
     }
   }
@@ -42,6 +40,17 @@ export const WalletLogin: FC = (props) => {
         onClick={connectWallet}
       >
         Connect Wallet
+      </Button>
+      <Button
+        fullWidth
+        size="large"
+        type="submit"
+        variant="contained"
+        color={'error'}
+        sx={{ mt: 2 }}
+        onClick={connectWallet}
+      >
+            disconnect
       </Button>
       <Typography>
         {account?.address}

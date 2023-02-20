@@ -39,7 +39,6 @@ export const connectAccount = createAsyncThunk(
         return window.ethereum
       }
     }
-    console.log('providerForWalletType', providerForWalletType)
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       await providerForWalletType(walletType),
