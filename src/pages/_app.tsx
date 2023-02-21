@@ -48,7 +48,7 @@ const App: FC<EnhancedAppProps> = (props) => {
     <CacheProvider value={emotionCache}>
       <Head>
         <title>
-          Material Kit Pro
+          App Chat
         </title>
         <meta
           name="viewport"
