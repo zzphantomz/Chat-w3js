@@ -4,8 +4,10 @@ import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { Box, Card, Container, Divider, Link, Typography } from '@mui/material';
-import {WalletLogin} from '@/components/authentication/walletLogin';
-import {gtm} from "@/libs/gtm";
+import { GuestGuard } from '../components/authentication/guest-guard';
+import { JWTLogin } from '../components/authentication/jwt-login';
+import { Logo } from '../components/logo';
+import { gtm } from '../lib/gtm';
 
 
 const Login: NextPage = () => {
@@ -18,6 +20,11 @@ const Login: NextPage = () => {
 
   return (
     <>
+      <Head>
+        <title>
+          Login | Material Kit Pro
+        </title>
+      </Head>
       <Box
         component="main"
         sx={{
@@ -48,7 +55,19 @@ const Login: NextPage = () => {
                 justifyContent: 'center'
               }}
             >
-
+              <NextLink
+                href="/"
+                passHref
+              >
+                <a>
+                  <Logo
+                    sx={{
+                      height: 40,
+                      width: 40
+                    }}
+                  />
+                </a>
+              </NextLink>
               <Typography variant="h4">
                 Log in
               </Typography>
@@ -57,7 +76,7 @@ const Login: NextPage = () => {
                 sx={{ mt: 2 }}
                 variant="body2"
               >
-                Sign in on the Chat platform
+                Sign in on the EOSWeb platform
               </Typography>
             </Box>
             <Box
@@ -66,8 +85,26 @@ const Login: NextPage = () => {
                 mt: 3
               }}
             >
-              <WalletLogin />
+              <JWTLogin />
             </Box>
+            <Divider sx={{ my: 3 }} />
+            <div>
+              <NextLink
+                href={
+                  disableGuard
+                    ? `/register?disableGuard=${disableGuard}`
+                    : '/register'
+                }
+                passHref
+              >
+                <Link
+                  color="textSecondary"
+                  variant="body2"
+                >
+                  Create new account
+                </Link>
+              </NextLink>
+            </div>
           </Card>
         </Container>
       </Box>
@@ -76,9 +113,9 @@ const Login: NextPage = () => {
 };
 
 Login.getLayout = (page) => (
-  <>
+  <GuestGuard>
     {page}
-  </>
+  </GuestGuard>
 );
 
 export default Login;
