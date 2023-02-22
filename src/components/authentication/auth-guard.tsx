@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import PropTypes from 'prop-types';
 import { useAuth } from '../../hooks/use-auth';
+import {useMoralis} from "react-moralis";
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -10,17 +11,18 @@ interface AuthGuardProps {
 
 export const AuthGuard: FC<AuthGuardProps> = (props) => {
   const { children } = props;
-  const auth = useAuth();
+  const { isAuthenticated } = useMoralis();
+
   const router = useRouter();
   const [checked, setChecked] = useState(false);
-
+  console.log("isAuthenticated", isAuthenticated)
   useEffect(
     () => {
       if (!router.isReady) {
         return;
       }
 
-      if (!auth.isAuthenticated) {
+      if (!isAuthenticated) {
         router.push({
           pathname: '/login',
           query: { returnUrl: router.asPath }
@@ -33,9 +35,9 @@ export const AuthGuard: FC<AuthGuardProps> = (props) => {
     [router.isReady]
   );
 
-  // if (!checked) {
-  //   return null;
-  // }
+  if (!checked) {
+    return null;
+  }
 
   // If got here, it means that the redirect did not occur, and that tells us that the user is
   // authenticated / authorized.

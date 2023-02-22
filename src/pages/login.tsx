@@ -22,7 +22,7 @@ const Login: NextPage = () => {
     <>
       <Head>
         <title>
-          Login | Material Kit Pro
+          Login
         </title>
       </Head>
       <Box
@@ -76,7 +76,7 @@ const Login: NextPage = () => {
                 sx={{ mt: 2 }}
                 variant="body2"
               >
-                Sign in on the EOSWeb platform
+                Sign in on the internal platform
               </Typography>
             </Box>
             <Box
@@ -87,24 +87,6 @@ const Login: NextPage = () => {
             >
               <JWTLogin />
             </Box>
-            <Divider sx={{ my: 3 }} />
-            <div>
-              <NextLink
-                href={
-                  disableGuard
-                    ? `/register?disableGuard=${disableGuard}`
-                    : '/register'
-                }
-                passHref
-              >
-                <Link
-                  color="textSecondary"
-                  variant="body2"
-                >
-                  Create new account
-                </Link>
-              </NextLink>
-            </div>
           </Card>
         </Container>
       </Box>

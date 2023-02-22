@@ -18,6 +18,7 @@ import { useAuth } from '../../hooks/use-auth';
 import { Cog as CogIcon } from '../../icons/cog';
 import { UserCircle as UserCircleIcon } from '../../icons/user-circle';
 import { SwitchHorizontalOutlined as SwitchHorizontalOutlinedIcon } from '../../icons/switch-horizontal-outlined';
+import {useMoralis} from "react-moralis";
 
 interface AccountPopoverProps {
   anchorEl: null | Element;
@@ -28,7 +29,16 @@ interface AccountPopoverProps {
 export const AccountPopover: FC<AccountPopoverProps> = (props) => {
   const { anchorEl, onClose, open, ...other } = props;
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user:userMoralis, logout } = useMoralis();
+
+  const truncateEthAddress = (address: string) => {
+    const truncateRegex = /^(0x[a-zA-Z0-9]{4})[a-zA-Z0-9]+([a-zA-Z0-9]{4})$/;
+
+    const match = address.match(truncateRegex);
+    if (!match) return address;
+    return `${match[1]}…${match[2]}`;
+  };
+
   // To get the user from the authContext, you can use
   // `const { user } = useAuth();`
   const user = {
@@ -37,14 +47,8 @@ export const AccountPopover: FC<AccountPopoverProps> = (props) => {
   };
 
   const handleLogout = async (): Promise<void> => {
-    try {
-      onClose?.();
-      await logout();
-      router.push('/').catch(console.error);
-    } catch (err) {
-      console.error(err);
-      toast.error('Unable to logout.');
-    }
+    logout();
+    router.push('/login')
   };
 
   return (
@@ -83,7 +87,7 @@ export const AccountPopover: FC<AccountPopoverProps> = (props) => {
           }}
         >
           <Typography variant="body1">
-            {user.name}
+            {truncateEthAddress(userMoralis?.attributes.ethAddress)}
           </Typography>
           <Typography
             color="textSecondary"
@@ -95,58 +99,6 @@ export const AccountPopover: FC<AccountPopoverProps> = (props) => {
       </Box>
       <Divider />
       <Box sx={{ my: 1 }}>
-        <NextLink
-          href="/dashboard/social/profile"
-          passHref
-        >
-          <MenuItem component="a">
-            <ListItemIcon>
-              <UserCircleIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary={(
-                <Typography variant="body1">
-                  Profile
-                </Typography>
-              )}
-            />
-          </MenuItem>
-        </NextLink>
-        <NextLink
-          href="/dashboard/account"
-          passHref
-        >
-          <MenuItem component="a">
-            <ListItemIcon>
-              <CogIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary={(
-                <Typography variant="body1">
-                  Settings
-                </Typography>
-              )}
-            />
-          </MenuItem>
-        </NextLink>
-        <NextLink
-          href="/dashboard"
-          passHref
-        >
-          <MenuItem component="a">
-            <ListItemIcon>
-              <SwitchHorizontalOutlinedIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary={(
-                <Typography variant="body1">
-                  Change organization
-                </Typography>
-              )}
-            />
-          </MenuItem>
-        </NextLink>
-        <Divider />
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />

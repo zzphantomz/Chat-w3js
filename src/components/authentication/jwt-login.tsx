@@ -1,101 +1,67 @@
-import type { FC } from 'react';
-import { useRouter } from 'next/router';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { Box, Button, FormHelperText, TextField } from '@mui/material';
-import { useAuth } from '../../hooks/use-auth';
-import { useMounted } from '../../hooks/use-mounted';
+import type {FC} from 'react';
+import {useRouter} from 'next/router';
+import {Box, Button} from '@mui/material';
+import {useAuth} from '../../hooks/use-auth';
+import {useMounted} from '../../hooks/use-mounted';
+import {useMoralis} from "react-moralis";
+import {useState} from "react";
+import Moralis from 'moralis-v1';
+
 
 export const JWTLogin: FC = (props) => {
   const isMounted = useMounted();
   const router = useRouter();
   const { login } = useAuth();
-  const formik = useFormik({
-    initialValues: {
-      username: '',
-      password: '',
-      submit: null
-    },
-    validationSchema: Yup.object({
-      username: Yup
-        .string()
-        // .email('Must be a valid email')
-        .max(255)
-        .required('Username is required'),
-      password: Yup
-        .string()
-        .max(255)
-        .required('Password is required')
-    }),
-    onSubmit: async (values, helpers): Promise<void> => {
-      try {
-        await login(values.username, values.password);
+  const [authError, setAuthError] = useState<null | Error>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const {authenticate, enableWeb3} = useMoralis()
 
-        if (isMounted()) {
-          const returnUrl = (router.query.returnUrl as string | undefined) || '/dashboard';
-          router.push(returnUrl).catch(console.error);
-        }
-      } catch (err) {
-        console.error(err);
+  const handleAuth = async (provider: 'metamask' | 'walletconnect' | 'magicLink' | 'web3Auth' = 'metamask') => {
+    try {
+      setAuthError(null);
+      setIsAuthenticating(true);
 
-        if (isMounted()) {
-          helpers.setStatus({ success: false });
-          helpers.setErrors({ submit: err.message });
-          helpers.setSubmitting(false);
-        }
+      // Enable web3 to get user address and chain
+      await enableWeb3({ throwOnError: true, provider });
+      const { account, chainId } = Moralis;
+
+      if (!account) {
+        throw new Error('Connecting to chain failed, as no connected account was found');
       }
+      if (!chainId) {
+        throw new Error('Connecting to chain failed, as no connected chain was found');
+      }
+
+      // Get message to sign from the auth api
+      const { message } = await Moralis.Cloud.run('requestMessage', {
+        address: account,
+        chain: parseInt(chainId, 16),
+        networkType: 'evm',
+      });
+
+      // Authenticate and login via parse
+      await authenticate({
+        signingMessage: message,
+        throwOnError: true,
+      });
+      router.push('/dashboard');
+    } catch (error) {
+      setAuthError(error);
+    } finally {
+      setIsAuthenticating(false);
     }
-  });
+  };
 
   return (
-    <form
-      noValidate
-      onSubmit={formik.handleSubmit}
-      {...props}
-    >
-      <TextField
-        autoFocus
-        error={Boolean(formik.touched.username && formik.errors.username)}
+    <Box sx={{ mt: 2 }}>
+      <Button
         fullWidth
-        helperText={formik.touched.username && formik.errors.username}
-        label="Username"
-        margin="normal"
-        name="username"
-        onBlur={formik.handleBlur}
-        onChange={formik.handleChange}
-        type="text"
-        value={formik.values.username}
-      />
-      <TextField
-        error={Boolean(formik.touched.password && formik.errors.password)}
-        fullWidth
-        helperText={formik.touched.password && formik.errors.password}
-        label="Password"
-        margin="normal"
-        name="password"
-        onBlur={formik.handleBlur}
-        onChange={formik.handleChange}
-        type="password"
-        value={formik.values.password}
-      />
-      {formik.errors.submit && (
-        <Box sx={{ mt: 3 }}>
-          <FormHelperText error>
-            {formik.errors.submit as string}
-          </FormHelperText>
-        </Box>
-      )}
-      <Box sx={{ mt: 2 }}>
-        <Button
-          disabled={formik.isSubmitting}
-          fullWidth
-          size="large"
-          type="submit"
-          variant="contained"
-        >
+        size="large"
+        type="submit"
+        variant="contained"
+        onClick={()=>{handleAuth("metamask")}} >
           Log In
-        </Button>
-      </Box>
-    </form>
+      </Button>
+    </Box>
   );
 };

@@ -26,6 +26,7 @@ import { NotificationsPopover } from './notifications-popover';
 import { LanguagePopover } from './language-popover';
 import {SettingsDrawer} from "../settings-drawer";
 import {Adjustments as AdjustmentsIcon} from "../../icons/adjustments";
+import {useMoralis} from "react-moralis";
 
 interface DashboardNavbarProps extends AppBarProps {
   onOpenSidebar?: () => void;
@@ -241,6 +242,8 @@ const NotificationsButton = () => {
 const AccountButton = () => {
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   const [openPopover, setOpenPopover] = useState<boolean>(false);
+  const { user:userMoralis } = useMoralis();
+  console.log(userMoralis)
   // To get the user from the authContext, you can use
   // `const { user } = useAuth();`
   const user = {

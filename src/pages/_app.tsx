@@ -23,6 +23,7 @@ import { gtm } from '../lib/gtm';
 import { store } from '../store';
 import { createTheme } from '../theme';
 import { createEmotionCache } from '../utils/create-emotion-cache';
+import {MoralisProvider} from "react-moralis";
 import '../lib/i18n/i18n';
 
 type EnhancedAppProps = AppProps & {
@@ -57,33 +58,40 @@ const App: FC<EnhancedAppProps> = (props) => {
       </Head>
       <ReduxProvider store={store}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <AuthProvider>
-            <SettingsProvider>
-              <SettingsConsumer>
-                {({ settings }) => (
-                  <ThemeProvider
-                    theme={createTheme({
-                      direction: settings.direction,
-                      responsiveFontSizes: settings.responsiveFontSizes,
-                      mode: settings.theme
-                    })}
-                  >
-                    <RTL direction={settings.direction}>
-                      <CssBaseline />
-                      <Toaster position="top-center" />
-                      <AuthConsumer>
-                        {
-                          (auth) => !auth.isInitialized
-                            ? <SplashScreen />
-                            : getLayout(<Component {...pageProps} />)
-                        }
-                      </AuthConsumer>
-                    </RTL>
-                  </ThemeProvider>
-                )}
-              </SettingsConsumer>
-            </SettingsProvider>
-          </AuthProvider>
+          <MoralisProvider
+            serverUrl={process.env.REACT_APP_SERVER_URL ?? 'http://localhost:1337/server'}
+            appId={process.env.REACT_APP_APPLICATION_ID ?? '001'}
+          >
+            <AuthProvider>
+              <SettingsProvider>
+                <SettingsConsumer>
+                  {({ settings }) => (
+                    <ThemeProvider
+                      theme={createTheme({
+                        direction: settings.direction,
+                        responsiveFontSizes: settings.responsiveFontSizes,
+                        mode: settings.theme
+                      })}
+                    >
+                      <RTL direction={settings.direction}>
+                        <CssBaseline />
+                        <Toaster position="top-center" />
+                        <AuthConsumer>
+                          {
+                            (auth) => !auth.isInitialized
+                              ?
+                              <SplashScreen />
+                              : getLayout(
+                                <Component {...pageProps} />)
+                          }
+                        </AuthConsumer>
+                      </RTL>
+                    </ThemeProvider>
+                  )}
+                </SettingsConsumer>
+              </SettingsProvider>
+            </AuthProvider>
+          </MoralisProvider>
         </LocalizationProvider>
       </ReduxProvider>
     </CacheProvider>
