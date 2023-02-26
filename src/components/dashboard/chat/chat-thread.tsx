@@ -12,7 +12,9 @@ import { Scrollbar } from '../../scrollbar';
 import { ChatMessageAdd } from './chat-message-add';
 import { ChatMessages } from './chat-messages';
 import { ChatThreadToolbar } from './chat-thread-toolbar';
-import {useMoralis} from "react-moralis";
+import {useMoralis, useMoralisQuery} from "react-moralis";
+import {Message} from "../../../types/chat";
+import lodash from 'lodash'
 
 interface ChatThreadProps {
   threadKey: string;
@@ -26,10 +28,42 @@ const threadSelector = (state: RootState): Thread | undefined => {
 
 export const ChatThread: FC<ChatThreadProps> = (props) => {
   const { threadKey } = props;
+  const second = Number(Date.now()/100).toFixed(0)
   const dispatch = useDispatch();
   const {user:userWallet, Moralis} = useMoralis()
   const router = useRouter();
-  const thread = useSelector((state) => threadSelector(state));
+  const [thread, setThread] = useState<Thread | undefined>(undefined);
+  const {data} = useMoralisQuery('Messenger', (query) => {
+    return query.ascending("createdAt").greaterThan("createdAt", new Date(Date.now()- 1000*60*60*24*7))
+  },[ second],{
+    live:true
+  })
+
+  console.log(second)
+
+  useEffect(() => {
+
+    if(data){
+      // let participants = []
+      const messages = data.map((message:any) => {
+        const data = lodash.get(message, 'attributes',{})
+        return {
+          id: message.id,
+          attachments:[],
+          body:data.message,
+          contentType: 'text',
+          createdAt: data.createdAt,
+          authorId:data.authorId
+        }
+      })
+      setThread({
+        messages: messages,
+        participantIds: ['5e86809283e28b96d2d38537','5e86809283e28b96d2d38537'],
+        type: 'ONE_TO_ONE'
+      })
+    }
+  }, [data])
+
   const messagesRef = useRef<any>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   // To get the user from the authContext, you can use
@@ -40,28 +74,30 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
 
   const getDetails = async (): Promise<void> => {
     try {
-      const _participants = await chatApi.getParticipants({ threadKey });
 
-      setParticipants(_participants);
-
-      // @ts-ignore
-      const threadId: string = await dispatch(getThread({
-        threadKey
-      }));
-
-      dispatch(setActiveThread({
-        threadId
-      }));
-      dispatch(markThreadAsSeen({
-        threadId
-      }));
-    } catch (err) {
-      // If thread key is not a valid key (thread id or contact id)
-      // the server throws an error, this means that the user tried a shady route
-      // and we redirect them on the home view
-      console.error(err);
-      router.push(`/dashboard/chat`).catch(console.error);
-    }
+    } catch (err) { }
+    //   const _participants = await chatApi.getParticipants({ threadKey });
+    //
+    //   setParticipants(_participants);
+    //
+    //   // @ts-ignore
+    //   const threadId: string = await dispatch(getThread({
+    //     threadKey
+    //   }));
+    //
+    //   dispatch(setActiveThread({
+    //     threadId
+    //   }));
+    //   dispatch(markThreadAsSeen({
+    //     threadId
+    //   }));
+    // } catch (err) {
+    //   // If thread key is not a valid key (thread id or contact id)
+    //   // the server throws an error, this means that the user tried a shady route
+    //   // and we redirect them on the home view
+    //   console.error(err);
+    //   router.push(`/dashboard/chat`).catch(console.error);
+    // }
   };
 
   useEffect(
@@ -88,19 +124,25 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   // Otherwise we use the recipients IDs. When using participant IDs, it means that we have to
   // get the thread.
   const handleSendMessage = (body: string):void => {
+
+
+
     try {
-      const Messages = Moralis.Object.extend('Messages')
+      const Messages = Moralis.Object.extend('Messenger')
       const messages = new Messages()
       messages.save({
         message: body,
+        attachments: [],
+        contentType: 'text',
+        createdAt: Date.now(),
         userName: userWallet?.getUsername(),
-        userAddress: userWallet?.get('ethAddress'),
+        authorId: userWallet?.get('ethAddress'),
+        participants: threadKey,
       }).then((result: any) => {console.log(result, 'result')})
     }
     catch (error) {
       console.log(error, 'error')
     }
-
     // console.log(body)
     // try {
     //   if (thread) {
@@ -139,7 +181,6 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
     //   console.error(err);
     // }
   };
-
   return (
     <Box
       sx={{

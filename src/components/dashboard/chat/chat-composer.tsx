@@ -7,6 +7,7 @@ import { addMessage } from '../../../thunks/chat';
 import type { Contact } from '../../../types/chat';
 import { ChatComposerToolbar } from './chat-composer-toolbar';
 import { ChatMessageAdd } from './chat-message-add';
+import {useMoralis} from "react-moralis";
 
 interface ChatComposerProps {}
 
@@ -14,16 +15,17 @@ export const ChatComposer: FC<ChatComposerProps> = (props) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [recipients, setRecipients] = useState<Contact[]>([]);
+  const {user, Moralis} = useMoralis()
 
   const handleAddRecipient = (recipient: Contact): void => {
     setRecipients((prevState) => {
-      const exists = prevState.find((_recipient) => _recipient.id === recipient.id);
+      // const exists = prevState.find((_recipient) => _recipient.id === recipient.id);
+      //
+      // if (!exists) {
+      //   return [...recipients, recipient];
+      // }
 
-      if (!exists) {
-        return [...recipients, recipient];
-      }
-
-      return recipients;
+      return [...prevState, recipient];
     });
   };
 
@@ -35,11 +37,13 @@ export const ChatComposer: FC<ChatComposerProps> = (props) => {
 
   const handleSendMessage = async (body: string): Promise<void> => {
     try {
-      // Handle send message and redirect to the new thread
-      const threadId = await dispatch(addMessage({
-        recipientIds: recipients.map((recipient) => recipient.id),
-        body
-      }));
+      const Messages = Moralis.Object.extend('Contacts')
+      let threadId = user?.get('ethAddress')
+      recipients.forEach((recipient) => { threadId += ('to' + recipient.id )})
+      const messages = new Messages()
+      messages.save({
+        threadID: threadId,
+      })
       router.push(`/dashboard/chat?threadKey=${threadId}`).catch(console.error);
     } catch (err) {
       console.error(err);

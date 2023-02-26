@@ -52,16 +52,25 @@ export const ChatComposerToolbar: FC<ChatThreadComposerProps> = (props) => {
   const handleSearchChange = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
     try {
       const { value } = event.target;
+      const now = new Date();
+      const data = {
+        id: value,
+        avatar: '/static/mock-images/avatars/avatar-alcides_antonio.png',
+        isActive: true,
+        lastActivity: now.getTime(),
+        name: value
+      }
 
       setQuery(value);
+      setSearchResults([data]);
 
-      if (value) {
-        const data = await chatApi.getContacts({ query: value });
-
-        setSearchResults(data);
-      } else {
-        setSearchResults([]);
-      }
+      // if (value) {
+      //   const data = await chatApi.getContacts({ query: value });
+      //
+      //   setSearchResults(data);
+      // } else {
+      //
+      // }
     } catch (err) {
       console.error(err);
     }

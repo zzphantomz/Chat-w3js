@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Box } from '@mui/material';
 import type { Message, Participant } from '../../../types/chat';
 import { ChatMessage } from './chat-message';
+import { useMoralis } from 'react-moralis';
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -12,6 +13,7 @@ interface ChatMessagesProps {
 export const ChatMessages: FC<ChatMessagesProps> = (props) => {
   const { messages, participants, ...other } = props;
   // To get the user from the authContext, you can use
+  const {user:userWallet} = useMoralis()
   // `const { user } = useAuth();`
   const user = {
     avatar: '/static/mock-images/avatars/avatar-anika_visser.png',
@@ -33,13 +35,13 @@ export const ChatMessages: FC<ChatMessagesProps> = (props) => {
 
         // Since chat mock db is not synced with external auth providers
         // we set the user details from user auth state instead of thread participants
-        if (message.authorId === '5e86809283e28b96d2d38537') {
+        if (message.authorId === userWallet?.get('ethAddress')) {
           authorAvatar = user.avatar;
           authorName = 'Me';
           authorType = 'user';
         } else {
-          authorAvatar = participant!.avatar;
-          authorName = participant!.name;
+          authorAvatar = '/static/mock-images/avatars/avatar-anika_visser.png';
+          authorName ='Anika Visser';
           authorType = 'contact';
         }
 
