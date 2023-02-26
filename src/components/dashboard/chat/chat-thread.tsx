@@ -12,6 +12,7 @@ import { Scrollbar } from '../../scrollbar';
 import { ChatMessageAdd } from './chat-message-add';
 import { ChatMessages } from './chat-messages';
 import { ChatThreadToolbar } from './chat-thread-toolbar';
+import {useMoralis} from "react-moralis";
 
 interface ChatThreadProps {
   threadKey: string;
@@ -26,6 +27,7 @@ const threadSelector = (state: RootState): Thread | undefined => {
 export const ChatThread: FC<ChatThreadProps> = (props) => {
   const { threadKey } = props;
   const dispatch = useDispatch();
+  const {user:userWallet, Moralis} = useMoralis()
   const router = useRouter();
   const thread = useSelector((state) => threadSelector(state));
   const messagesRef = useRef<any>(null);
@@ -85,43 +87,57 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   // If we have the thread, we use its ID to add a new message
   // Otherwise we use the recipients IDs. When using participant IDs, it means that we have to
   // get the thread.
-  const handleSendMessage = async (body: string): Promise<void> => {
+  const handleSendMessage = (body: string):void => {
     try {
-      if (thread) {
-        await dispatch(addMessage({
-          threadId: thread.id,
-          body
-        }));
-      } else {
-        const recipientIds = participants
-          .filter((participant) => participant.id !== user.id)
-          .map((participant) => participant.id);
-
-        // @ts-ignore
-        const threadId: string = await dispatch(addMessage({
-          recipientIds,
-          body
-        }));
-
-        await dispatch(getThread({
-          threadKey: threadId
-        }));
-        // @ts-ignore
-        dispatch(setActiveThread(threadId));
-      }
-
-      // Scroll to bottom of the messages after adding the new message
-      if (messagesRef?.current) {
-        const scrollElement = messagesRef.current.getScrollElement();
-
-        scrollElement.scrollTo({
-          top: messagesRef.current.el.scrollHeight,
-          behavior: 'smooth'
-        });
-      }
-    } catch (err) {
-      console.error(err);
+      const Messages = Moralis.Object.extend('Messages')
+      const messages = new Messages()
+      messages.save({
+        message: body,
+        userName: userWallet?.getUsername(),
+        userAddress: userWallet?.get('ethAddress'),
+      }).then((result: any) => {console.log(result, 'result')})
     }
+    catch (error) {
+      console.log(error, 'error')
+    }
+
+    // console.log(body)
+    // try {
+    //   if (thread) {
+    //     await dispatch(addMessage({
+    //       threadId: thread.id,
+    //       body
+    //     }));
+    //   } else {
+    //     const recipientIds = participants
+    //       .filter((participant) => participant.id !== user.id)
+    //       .map((participant) => participant.id);
+    //
+    //     // @ts-ignore
+    //     const threadId: string = await dispatch(addMessage({
+    //       recipientIds,
+    //       body
+    //     }));
+    //
+    //     await dispatch(getThread({
+    //       threadKey: threadId
+    //     }));
+    //     // @ts-ignore
+    //     dispatch(setActiveThread(threadId));
+    //   }
+    //
+    //   // Scroll to bottom of the messages after adding the new message
+    //   if (messagesRef?.current) {
+    //     const scrollElement = messagesRef.current.getScrollElement();
+    //
+    //     scrollElement.scrollTo({
+    //       top: messagesRef.current.el.scrollHeight,
+    //       behavior: 'smooth'
+    //     });
+    //   }
+    // } catch (err) {
+    //   console.error(err);
+    // }
   };
 
   return (

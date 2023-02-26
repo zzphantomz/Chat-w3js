@@ -10,7 +10,7 @@ import { Logo } from '../components/logo';
 import { gtm } from '../lib/gtm';
 
 
-const Login: NextPage = () => {
+const Index: NextPage = () => {
   const router = useRouter();
   const { disableGuard } = router.query;
 
@@ -94,10 +94,10 @@ const Login: NextPage = () => {
   );
 };
 
-Login.getLayout = (page) => (
+Index.getLayout = (page) => (
   <GuestGuard>
     {page}
   </GuestGuard>
 );
 
-export default Login;
+export default Index;
