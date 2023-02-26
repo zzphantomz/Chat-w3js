@@ -28,18 +28,16 @@ const threadSelector = (state: RootState): Thread | undefined => {
 
 export const ChatThread: FC<ChatThreadProps> = (props) => {
   const { threadKey } = props;
-  const second = Number(Date.now()/100).toFixed(0)
-  const dispatch = useDispatch();
   const {user:userWallet, Moralis} = useMoralis()
+  const time = new Date(Date.now()- 1000*60*60*24*7)
   const router = useRouter();
   const [thread, setThread] = useState<Thread | undefined>(undefined);
   const {data} = useMoralisQuery('Messenger', (query) => {
     return query.ascending("createdAt").greaterThan("createdAt", new Date(Date.now()- 1000*60*60*24*7))
-  },[ second],{
+  },[ time],{
     live:true
   })
 
-  console.log(second)
 
   useEffect(() => {
 
