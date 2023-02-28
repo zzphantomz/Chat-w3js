@@ -40,8 +40,8 @@ export const ChatMessages: FC<ChatMessagesProps> = (props) => {
           authorName = 'Me';
           authorType = 'user';
         } else {
-          authorAvatar = '/static/mock-images/avatars/avatar-anika_visser.png';
-          authorName ='Anika Visser';
+          authorAvatar = '';
+          authorName = message.authorId;
           authorType = 'contact';
         }
 

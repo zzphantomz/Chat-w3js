@@ -4,6 +4,7 @@ export interface Contact {
   isActive: boolean;
   lastActivity?: number;
   name: string;
+  threadId?: string;
 }
 
 interface Attachment {
@@ -18,6 +19,7 @@ export interface Message {
   contentType: string;
   createdAt: number;
   authorId: string;
+  participants?:string;
 }
 
 export interface Participant {

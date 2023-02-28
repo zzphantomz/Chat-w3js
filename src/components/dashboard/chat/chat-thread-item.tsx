@@ -5,6 +5,7 @@ import { formatDistanceStrict } from 'date-fns';
 import locale from 'date-fns/locale/en-US';
 import { Avatar, AvatarGroup, Box, ListItem, ListItemAvatar, Typography } from '@mui/material';
 import type { Thread } from '../../../types/chat';
+import {useMoralis, useMoralisQuery} from "react-moralis";
 
 const formatDistanceLocale: Record<string, string> = {
   lessThanXSeconds: '{{count}}s',
@@ -54,27 +55,24 @@ export const ChatThreadItem: FC<ChatThreadItemProps> = (props) => {
   const { active, thread, onSelect, ...other } = props;
   // To get the user from the authContext, you can use
   // `const { user } = useAuth();`
-  const user = {
-    id: '5e86809283e28b96d2d38537'
-  };
+  const {user, Moralis} = useMoralis()
 
-  const recipients = thread.participants!.filter((participant) => (
-    participant.id !== user.id
+  const recipients = thread.participantIds!.filter((participant) => (
+    participant !== user?.get('ethAddress')
   ));
-  const lastMessage = thread.messages[thread.messages.length - 1];
-  const name = recipients
-    .reduce((names: string[], participant) => [...names, participant.name], [])
-    .join(', ');
+  console.log(thread)
+  // const lastMessage = thread.messages[thread.messages.length - 1];
+  const name = recipients[0];
   let content = '';
 
-  if (lastMessage) {
-    const author = lastMessage.authorId === user.id ? 'Me: ' : '';
-    const message = lastMessage.contentType === 'image'
-      ? 'Sent a photo'
-      : lastMessage.body;
-
-    content = `${author}${message}`;
-  }
+  // if (lastMessage) {
+  //   const author = lastMessage.authorId === user.id ? 'Me: ' : '';
+  //   const message = lastMessage.contentType === 'image'
+  //     ? 'Sent a photo'
+  //     : lastMessage.body;
+  //
+  //   content = `${author}${message}`;
+  // }
 
   return (
     <ListItem
@@ -167,20 +165,20 @@ export const ChatThreadItem: FC<ChatThreadItemProps> = (props) => {
           </Typography>
         </Box>
       </Box>
-      <Typography
-        color="textSecondary"
-        sx={{ whiteSpace: 'nowrap' }}
-        variant="caption"
-      >
-        {formatDistanceStrict(
-          lastMessage.createdAt,
-          new Date(),
-          {
-            addSuffix: false,
-            locale: customLocale
-          }
-        )}
-      </Typography>
+      {/*<Typography*/}
+      {/*  color="textSecondary"*/}
+      {/*  sx={{ whiteSpace: 'nowrap' }}*/}
+      {/*  variant="caption"*/}
+      {/*>*/}
+      {/*  {formatDistanceStrict(*/}
+      {/*    lastMessage.createdAt,*/}
+      {/*    new Date(),*/}
+      {/*    {*/}
+      {/*      addSuffix: false,*/}
+      {/*      locale: customLocale*/}
+      {/*    }*/}
+      {/*  )}*/}
+      {/*</Typography>*/}
     </ListItem>
   );
 };

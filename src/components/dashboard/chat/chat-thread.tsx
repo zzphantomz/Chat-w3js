@@ -1,19 +1,16 @@
-import type { FC } from 'react';
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/router';
+import type {FC} from 'react';
+import {useEffect, useRef, useState} from 'react';
+import {useRouter} from 'next/router';
 import PropTypes from 'prop-types';
-import { Box, Divider } from '@mui/material';
-import { chatApi } from '../../../__fake-api__/chat-api';
-import type { RootState } from '../../../store';
-import { useDispatch, useSelector } from '../../../store';
-import { addMessage, getThread, markThreadAsSeen, setActiveThread } from '../../../thunks/chat';
-import type { Participant, Thread } from '../../../types/chat';
-import { Scrollbar } from '../../scrollbar';
-import { ChatMessageAdd } from './chat-message-add';
-import { ChatMessages } from './chat-messages';
-import { ChatThreadToolbar } from './chat-thread-toolbar';
-import {useMoralis, useMoralisQuery} from "react-moralis";
+import {Box, Divider} from '@mui/material';
+import type {RootState} from '../../../store';
+import type {Participant, Thread} from '../../../types/chat';
 import {Message} from "../../../types/chat";
+import {Scrollbar} from '../../scrollbar';
+import {ChatMessageAdd} from './chat-message-add';
+import {ChatMessages} from './chat-messages';
+import {ChatThreadToolbar} from './chat-thread-toolbar';
+import {useMoralis, useMoralisQuery} from "react-moralis";
 import lodash from 'lodash'
 
 interface ChatThreadProps {
@@ -34,7 +31,7 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   const [thread, setThread] = useState<Thread | undefined>(undefined);
   const {data} = useMoralisQuery('Messenger', (query) => {
     return query.ascending("createdAt").greaterThan("createdAt", new Date(Date.now()- 1000*60*60*24*7))
-  },[ time],{
+  },[threadKey],{
     live:true
   })
 
@@ -42,25 +39,33 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   useEffect(() => {
 
     if(data){
-      // let participants = []
+      const participantsID = threadKey.split('to')
       const messages = data.map((message:any) => {
         const data = lodash.get(message, 'attributes',{})
+
         return {
           id: message.id,
           attachments:[],
           body:data.message,
           contentType: 'text',
           createdAt: data.createdAt,
-          authorId:data.authorId
+          authorId:data.authorId,
+          participants:data.participants,
         }
       })
+
+      const filterMessages = messages.filter((message:Message) => {
+        if (!message.participants) return false
+        return message.participants.includes(participantsID[1])&&message.participants.includes(participantsID[0])
+      })
+      console.log(filterMessages)
       setThread({
-        messages: messages,
-        participantIds: ['5e86809283e28b96d2d38537','5e86809283e28b96d2d38537'],
+        messages: filterMessages,
+        participantIds: participantsID,
         type: 'ONE_TO_ONE'
       })
     }
-  }, [data])
+  }, [data, threadKey])
 
   const messagesRef = useRef<any>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
