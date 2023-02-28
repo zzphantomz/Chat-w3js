@@ -39,7 +39,7 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   useEffect(() => {
 
     if(data){
-      const participantsID = threadKey.split('to')
+      const participantsID = threadKey?.split('to')??[]
       const messages = data.map((message:any) => {
         const data = lodash.get(message, 'attributes',{})
 

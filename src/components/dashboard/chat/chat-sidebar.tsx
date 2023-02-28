@@ -235,7 +235,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
   };
 
   const returnThread = (threadId: string): Thread => {
-    const split = threadId.split('to')
+    const split = threadId?.split('to')??[]
     const dataReturn = thread?.find((_thread) => _thread.participantIds.includes(split[0]) && _thread.participantIds.includes(split[1]));
     if (!dataReturn) return {
       messages: [],
