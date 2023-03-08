@@ -29,8 +29,11 @@ export const ChatMessage: FC<ChatMessageProps> = (props) => {
 
   useEffect(() => {
     const data = JSON.parse(body)
-    if (!privateKey) {
-      setMessage(data?.ephemPublicKey)
+    if (authorName === 'Me') {
+
+    }
+    if (!privateKey||authorName === 'Me') {
+      setMessage(data?.ephemPublicKey.substring(0, 50))
       return
     }
     decryptMess(data).then((mess) => {
