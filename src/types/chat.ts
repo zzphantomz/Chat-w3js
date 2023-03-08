@@ -15,7 +15,7 @@ interface Attachment {
 export interface Message {
   id: string;
   attachments: Attachment[];
-  body: string;
+  body: any;
   contentType: string;
   createdAt: number;
   authorId: string;

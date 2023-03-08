@@ -52,10 +52,11 @@ export const ChatComposerToolbar: FC<ChatThreadComposerProps> = (props) => {
   const handleSearchChange = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
     try {
       const { value } = event.target;
+
       const now = new Date();
       const data = {
         id: value,
-        avatar: '/static/mock-images/avatars/avatar-alcides_antonio.png',
+        avatar: '',
         isActive: true,
         lastActivity: now.getTime(),
         name: value

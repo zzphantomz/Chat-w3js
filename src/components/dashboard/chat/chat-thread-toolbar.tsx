@@ -5,12 +5,12 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import {
   Avatar,
   AvatarGroup,
-  Box,
-  IconButton,
+  Box, Button,
+  IconButton, Input,
   ListItemIcon,
   ListItemText,
   Menu,
-  MenuItem,
+  MenuItem, Modal,
   Tooltip,
   Typography
 } from '@mui/material';
@@ -22,6 +22,8 @@ import { Phone as PhoneIcon } from '../../../icons/phone';
 import { DotsHorizontal as DotsHorizontalIcon } from '../../../icons/dots-horizontal';
 import { Trash as TrashIcon } from '../../../icons/trash';
 import type { Participant } from '../../../types/chat';
+import {setPrivateKey, setPublicKey} from "../../../slices/keyEth";
+import {useDispatch} from "react-redux";
 
 interface ChatThreadToolbarProps {
   participants: Participant[];
@@ -31,11 +33,26 @@ export const ChatThreadToolbar: FC<ChatThreadToolbarProps> = (props) => {
   const { participants, ...other } = props;
   const moreRef = useRef<HTMLButtonElement | null>(null);
   const [openMenu, setOpenMenu] = useState<boolean>(false);
+  const dispatch = useDispatch();
+  const [openModal, setOpenModal] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   // To get the user from the authContext, you can use
   // `const { user } = useAuth();`
   const user = {
     id: '5e86809283e28b96d2d38537'
   };
+
+  const onConfirmAddPrivateKey = () =>{
+    const privateKey = inputRef.current?.value
+    console.log(privateKey)
+    if(privateKey){
+      dispatch(setPrivateKey(privateKey))
+    }
+    handleClose()
+  }
+
+  const handleOpen = () => setOpenModal(true);
+  const handleClose = () => setOpenModal(false);
 
   const recipients = participants.filter((participant) => (
     participant.id !== user.id
@@ -53,6 +70,10 @@ export const ChatThreadToolbar: FC<ChatThreadToolbarProps> = (props) => {
     setOpenMenu(false);
   };
 
+  const handleDecodeMessenger = (): void => {
+
+  }
+
   return (
     <Box
       sx={{
@@ -69,6 +90,38 @@ export const ChatThreadToolbar: FC<ChatThreadToolbarProps> = (props) => {
       }}
       {...other}
     >
+      <Modal
+        open={openModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={
+          {
+            position: 'absolute' as 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+          }
+        }>
+          <Typography id="modal-modal-title"
+            variant="h6"
+            component="h2">
+            Need Private Key to Decrypt
+          </Typography>
+          <Typography id="modal-modal-description"
+            sx={{ mt: 2 }}>
+          </Typography>
+          <Input placeholder="Private Key"
+            inputRef={inputRef} />
+          <Button onClick={onConfirmAddPrivateKey}>Confirm</Button>
+        </Box>
+      </Modal>
       <Box
         sx={{
           alignItems: 'center',
@@ -113,7 +166,8 @@ export const ChatThreadToolbar: FC<ChatThreadToolbarProps> = (props) => {
         </Box>
       </Box>
       <Box sx={{ flexGrow: 1 }} />
-      <IconButton>
+      <Button onClick={handleOpen}>Decrypt</Button>
+      <IconButton >
         <PhoneIcon fontSize="small" />
       </IconButton>
       <IconButton>

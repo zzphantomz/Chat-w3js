@@ -12,6 +12,9 @@ import {ChatMessages} from './chat-messages';
 import {ChatThreadToolbar} from './chat-thread-toolbar';
 import {useMoralis, useMoralisQuery} from "react-moralis";
 import lodash from 'lodash'
+import EthCrypto from 'eth-crypto';
+import {useDispatch, useSelector} from "react-redux";
+import {setGuestKey, setPublicKey} from "../../../slices/keyEth";
 
 interface ChatThreadProps {
   threadKey: string;
@@ -27,7 +30,10 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   const { threadKey } = props;
   const {user:userWallet, Moralis} = useMoralis()
   const time = new Date(Date.now()- 1000*60*60*24*7)
+  const guestKey = useSelector((state: RootState) => state.keyEth.guestPublicKey);
+  const publicKey = useSelector((state: RootState) => state.keyEth.publicKey);
   const router = useRouter();
+  const dispatch = useDispatch();
   const [thread, setThread] = useState<Thread | undefined>(undefined);
   const {data} = useMoralisQuery('Messenger', (query) => {
     return query.ascending("createdAt").greaterThan("createdAt", new Date(Date.now()- 1000*60*60*24*7))
@@ -39,14 +45,26 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   useEffect(() => {
 
     if(data){
-      const participantsID = threadKey?.split('to')??[]
+      const participantsID = threadKey.split('to')
+      const dataOneGuestMessenger = data.find((message:any) => message.attributes.authorId !== userWallet?.get('ethAddress'))
+      const dataOneAuthorMessenger = data.find((message:any) => message.attributes.authorId !== userWallet?.get('ethAddress'))
+      if (dataOneGuestMessenger){
+        const guestPublicKey = dataOneGuestMessenger.attributes.authorPublicKey
+        const authorPublicKey = dataOneGuestMessenger.attributes.guestPublicKey
+        dispatch(setPublicKey(authorPublicKey))
+        dispatch(setGuestKey(guestPublicKey))
+      } else if (dataOneAuthorMessenger){
+        const guestPublicKey = dataOneAuthorMessenger.attributes.guestPublicKey
+        const authorPublicKey = dataOneAuthorMessenger.attributes.authorPublicKey
+        dispatch(setPublicKey(authorPublicKey))
+        dispatch(setGuestKey(guestPublicKey))
+      }
       const messages = data.map((message:any) => {
         const data = lodash.get(message, 'attributes',{})
-
         return {
           id: message.id,
           attachments:[],
-          body:data.message,
+          body: data.message,
           contentType: 'text',
           createdAt: data.createdAt,
           authorId:data.authorId,
@@ -59,6 +77,7 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
         return message.participants.includes(participantsID[1])&&message.participants.includes(participantsID[0])
       })
       console.log(filterMessages)
+
       setThread({
         messages: filterMessages,
         participantIds: participantsID,
@@ -126,19 +145,25 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   // If we have the thread, we use its ID to add a new message
   // Otherwise we use the recipients IDs. When using participant IDs, it means that we have to
   // get the thread.
-  const handleSendMessage = (body: string):void => {
-
+  const handleSendMessage = async (body: string):Promise<void> => {
+    const destination = threadKey.split('to').find((id) => id !== userWallet?.get('ethAddress'))
+    if (!destination) return
+    console.log(guestKey)
+    // const encrypted = await EthCrypto.encryptWithPublicKey('0xd220e0e316807d263c94ccbac6ffee1cf078422f',body);
+    const encryptedMessage = await EthCrypto.encryptWithPublicKey(guestKey, body);
 
 
     try {
       const Messages = Moralis.Object.extend('Messenger')
       const messages = new Messages()
       messages.save({
-        message: body,
+        message: JSON.stringify(encryptedMessage),
         attachments: [],
         contentType: 'text',
         createdAt: Date.now(),
         userName: userWallet?.getUsername(),
+        authorPublicKey: publicKey,
+        guestPublicKey: guestKey,
         authorId: userWallet?.get('ethAddress'),
         participants: threadKey,
       }).then((result: any) => {console.log(result, 'result')})

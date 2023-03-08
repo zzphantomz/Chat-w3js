@@ -1,10 +1,10 @@
 import type {ChangeEvent, FC, MutableRefObject} from 'react';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useRouter} from 'next/router';
 import NextLink from 'next/link';
 import PropTypes from 'prop-types';
-import type {Theme} from '@mui/material';
-import {Box, Button, Drawer, IconButton, List, Typography, useMediaQuery} from '@mui/material';
+import {Input, Theme} from '@mui/material';
+import {Box, Button, Drawer, IconButton, List, Modal, Typography, useMediaQuery} from '@mui/material';
 import {styled} from '@mui/material/styles';
 import {chatApi} from '../../../__fake-api__/chat-api';
 import {Plus as PlusIcon} from '../../../icons/plus';
@@ -17,6 +17,9 @@ import {ChatContactSearch} from './chat-contact-search';
 import {ChatThreadItem} from './chat-thread-item';
 import {useMoralis, useMoralisQuery} from "react-moralis";
 import lodash from "lodash";
+import {useDispatch} from "react-redux";
+import {setPublicKey} from "../../../slices/keyEth";
+import EthCrypto from "eth-crypto";
 
 interface ChatSidebarProps {
   containerRef?: MutableRefObject<HTMLDivElement | null>;
@@ -46,6 +49,8 @@ const ChatSidebarMobile = styled(Drawer)({
 
 export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
   const { containerRef, onClose, open, ...other } = props;
+  const { publicKey } = useSelector((state) => state.keyEth);
+  const [openModal, setOpenModal] = useState(false);
   const router = useRouter();
   const { threads, activeThreadId } = useSelector((state) => state.chat);
   const [threadsChat, setThreadsChat] = useState<Contact[]>([]);
@@ -54,7 +59,9 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
   const mdUp = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'));
   const [thread, setThread] = useState<Thread[] | undefined>(undefined);
+  const dispatch= useDispatch();
 
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {user:userWallet, Moralis} = useMoralis()
 
@@ -69,6 +76,9 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
   },[],{
     live:true
   })
+
+  const handleOpen = () => setOpenModal(true);
+  const handleClose = () => setOpenModal(false);
 
   function arrayCompare(_arr1:[], _arr2:[]) {
     if (
@@ -90,6 +100,16 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
     }
 
     return true;
+  }
+  const ariaLabel = { 'aria-label': 'description' };
+
+  const onConfirmAddPublicKey = () =>{
+    const publicKey = inputRef.current?.value
+    console.log(publicKey)
+    if(publicKey){
+      dispatch(setPublicKey(publicKey))
+    }
+    handleClose()
   }
 
   useEffect(() => {
@@ -127,7 +147,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
 
         if (userChat) return {
           id: item.id.toString(),
-          avatar: '/static/mock-images/avatars/avatar-jie_yan_song.png',
+          avatar: '',
           isActive: false,
           name: nameGuest??"",
           threadId: data?.threadID??"",
@@ -187,6 +207,16 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
 
 
   const handleGroupClick = (): void => {
+    const publicKey1 = EthCrypto.publicKeyByPrivateKey(
+      '479f8520edf1af4046afd5164a26fd81182ff31f4f3c5f8c59a1634349644835'
+    );
+    console.log(publicKey1)
+    if (publicKey) {
+      router.push('/dashboard/chat?compose=true')
+    } else {
+      setOpenModal(true)
+
+    }
     if (!mdUp) {
       onClose?.();
     }
@@ -247,6 +277,38 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
 
   const content = (
     <div>
+      <Modal
+        open={openModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={
+          {
+            position: 'absolute' as 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+          }
+        }>
+          <Typography id="modal-modal-title"
+            variant="h6"
+            component="h2">
+            Need Public Key To chat
+          </Typography>
+          <Typography id="modal-modal-description"
+            sx={{ mt: 2 }}>
+          </Typography>
+          <Input placeholder="Your Public Key"
+            inputRef={inputRef} />
+          <Button onClick={onConfirmAddPublicKey}>Confirm</Button>
+        </Box>
+      </Modal>
       <Box
         sx={{
           alignItems: 'center',
@@ -258,19 +320,14 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
           Chats
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
-        <NextLink
-          href="/dashboard/chat?compose=true"
-          passHref
+        <Button
+          component="a"
+          onClick={handleGroupClick}
+          startIcon={<PlusIcon />}
+          variant="contained"
         >
-          <Button
-            component="a"
-            onClick={handleGroupClick}
-            startIcon={<PlusIcon />}
-            variant="contained"
-          >
             Group
-          </Button>
-        </NextLink>
+        </Button>
         <IconButton
           onClick={onClose}
           sx={{
@@ -313,6 +370,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
           </List>
         </Scrollbar>
       </Box>
+
     </div>
   );
 
@@ -331,17 +389,37 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
   }
 
   return (
-    <ChatSidebarMobile
-      anchor="left"
-      ModalProps={{ container: containerRef?.current }}
-      onClose={onClose}
-      open={open}
-      SlideProps={{ container: containerRef?.current }}
-      variant="temporary"
-      {...other}
-    >
-      {content}
-    </ChatSidebarMobile>
+    <>
+      <ChatSidebarMobile
+        anchor="left"
+        ModalProps={{ container: containerRef?.current }}
+        onClose={onClose}
+        open={open}
+        SlideProps={{ container: containerRef?.current }}
+        variant="temporary"
+        {...other}
+      >
+        {content}
+      </ChatSidebarMobile>
+      <Modal
+        open={openModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box >
+          <Typography id="modal-modal-title"
+            variant="h6"
+            component="h2">
+            Text in a modal
+          </Typography>
+          <Typography id="modal-modal-description"
+            sx={{ mt: 2 }}>
+            Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
+          </Typography>
+        </Box>
+      </Modal>
+    </>
   );
 };
 

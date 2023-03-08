@@ -8,6 +8,8 @@ import type { Contact } from '../../../types/chat';
 import { ChatComposerToolbar } from './chat-composer-toolbar';
 import { ChatMessageAdd } from './chat-message-add';
 import {useMoralis} from "react-moralis";
+import EthCrypto from "eth-crypto";
+import {setGuestKey} from "../../../slices/keyEth";
 
 interface ChatComposerProps {}
 
@@ -39,7 +41,10 @@ export const ChatComposer: FC<ChatComposerProps> = (props) => {
     try {
       const Messages = Moralis.Object.extend('Contacts')
       let threadId = user?.get('ethAddress')
-      recipients.forEach((recipient) => { threadId += ('to' + recipient.id )})
+      recipients.forEach((recipient) => {
+        const address = EthCrypto.publicKey.toAddress(recipient.id)
+        dispatch(setGuestKey(recipient.id))
+        threadId += ('to' + address)})
       const messages = new Messages()
       messages.save({
         threadID: threadId,

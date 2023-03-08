@@ -1,8 +1,11 @@
 import type { FC } from 'react';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Avatar, Box, Card, CardMedia, Link, Typography } from '@mui/material';
+import EthCrypto from "eth-crypto";
+import {useSelector} from "react-redux";
+import {RootState} from "../../../store";
 
 type AuthorType = 'contact' | 'user';
 
@@ -10,14 +13,31 @@ interface ChatMessageProps {
   authorAvatar?: string | null;
   authorName: string;
   authorType: AuthorType;
-  body: string;
+  body: any;
   contentType: string;
   createdAt: number;
 }
 
 export const ChatMessage: FC<ChatMessageProps> = (props) => {
   const { body, contentType, createdAt, authorAvatar, authorName, authorType, ...other } = props;
+  const [message, setMessage] = useState<string>('');
+  const privateKey = useSelector((state: RootState) => state.keyEth.privateKey);
   const [expandMedia, setExpandMedia] = useState<boolean>(false);
+  const decryptMess = async (message:any) => {
+    return await EthCrypto.decryptWithPrivateKey(privateKey, message)
+  }
+
+  useEffect(() => {
+    const data = JSON.parse(body)
+    if (!privateKey) {
+      setMessage(data?.ephemPublicKey)
+      return
+    }
+    decryptMess(data).then((mess) => {
+      setMessage(mess)
+    })
+
+  },[body, privateKey])
 
   return (
     <Box
@@ -77,7 +97,7 @@ export const ChatMessage: FC<ChatMessageProps> = (props) => {
                   color="inherit"
                   variant="body1"
                 >
-                  {body}
+                  {message}
                 </Typography>
               )
           }
