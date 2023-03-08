@@ -20,7 +20,6 @@ export const JWTLogin: FC = (props) => {
     try {
       setAuthError(null);
       setIsAuthenticating(true);
-
       // Enable web3 to get user address and chain
       await enableWeb3({ throwOnError: true, provider });
       const { account, chainId } = Moralis;

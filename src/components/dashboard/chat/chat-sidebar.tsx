@@ -191,7 +191,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
       const threads = threadIs.map((thead:any) => {
         const userInThread = thead.split('to')
         const threadMessages = messages.filter((message:any) => {
-          return message.participants?.includes(userInThread[0]) && message.participants?.includes(userInThread[1]) && message.participants?.includes(userWallet?.get('ethAddress'))
+          return message.participants?.includes(userInThread[0]).toLowerCase() && message.participants?.includes(userInThread[1].toLowerCase()) && message.participants?.includes(userWallet?.get('ethAddress').toLowerCase())
         })
         return {
           messages: threadMessages,
@@ -210,7 +210,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
     const publicKey1 = EthCrypto.publicKeyByPrivateKey(
       '479f8520edf1af4046afd5164a26fd81182ff31f4f3c5f8c59a1634349644835'
     );
-    console.log(publicKey1)
     if (publicKey) {
       router.push('/dashboard/chat?compose=true')
     } else {
@@ -266,10 +265,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
 
   const returnThread = (threadId: string): Thread => {
     const split = threadId?.split('to')??[]
-    const dataReturn = thread?.find((_thread) => _thread.participantIds.includes(split[0]) && _thread.participantIds.includes(split[1]));
+    const dataReturn = thread?.find((_thread) => _thread.participantIds.includes(split[0].toLowerCase()) && _thread.participantIds.includes(split[1].toLowerCase()));
     if (!dataReturn) return {
       messages: [],
-      participantIds: ['5e86809283e28b96d2d38537','5e86809283e28b96d2d38537'],
+      participantIds: ["",""],
       type: 'ONE_TO_ONE'
     }
     return dataReturn
