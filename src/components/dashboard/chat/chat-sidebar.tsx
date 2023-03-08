@@ -113,7 +113,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
   }
 
   useEffect(() => {
-    console.log(data)
+    console.log(data,'data')
     if (data) {
       let removeDuplicates:any[] = []
       data.forEach((item:any) => {
@@ -144,6 +144,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
 
 
         const userChat = data?.threadID?.includes(userWallet?.get('ethAddress'))
+        console.log('threadsChat', userChat)
 
         if (userChat) return {
           id: item.id.toString(),
@@ -154,7 +155,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
         } as Contact
         return {} as Contact
       })
-      console.log(threadsChat)
+      console.log(threadsChat,'threadsChat')
 
       setThreadsChat(threadsChat)
     }
@@ -191,7 +192,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
       const threads = threadIs.map((thead:any) => {
         const userInThread = thead.split('to')
         const threadMessages = messages.filter((message:any) => {
-          return message.participants?.includes(userInThread[0]).toLowerCase() && message.participants?.includes(userInThread[1].toLowerCase()) && message.participants?.includes(userWallet?.get('ethAddress').toLowerCase())
+          return message.participants?.includes(userInThread[0]?.toLowerCase()) && message.participants?.includes(userInThread[1]?.toLowerCase()) && message.participants?.includes(userWallet?.get('ethAddress'?.toLowerCase()))
         })
         return {
           messages: threadMessages,
@@ -265,7 +266,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
 
   const returnThread = (threadId: string): Thread => {
     const split = threadId?.split('to')??[]
-    const dataReturn = thread?.find((_thread) => _thread.participantIds.includes(split[0].toLowerCase()) && _thread.participantIds.includes(split[1].toLowerCase()));
+    const dataReturn = thread?.find((_thread) => _thread.participantIds.includes(split[0]?.toLowerCase()) && _thread.participantIds.includes(split[1]?.toLowerCase()));
     if (!dataReturn) return {
       messages: [],
       participantIds: ["",""],
