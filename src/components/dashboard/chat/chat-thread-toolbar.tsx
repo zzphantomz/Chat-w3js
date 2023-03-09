@@ -22,7 +22,7 @@ import { Phone as PhoneIcon } from '../../../icons/phone';
 import { DotsHorizontal as DotsHorizontalIcon } from '../../../icons/dots-horizontal';
 import { Trash as TrashIcon } from '../../../icons/trash';
 import type { Participant } from '../../../types/chat';
-import {setPrivateKey, setPublicKey} from "../../../slices/keyEth";
+import {setGuestKey, setPrivateKey, setPublicKey} from "../../../slices/keyEth";
 import {useDispatch} from "react-redux";
 
 interface ChatThreadToolbarProps {
@@ -43,10 +43,10 @@ export const ChatThreadToolbar: FC<ChatThreadToolbarProps> = (props) => {
   };
 
   const onConfirmAddPrivateKey = () =>{
-    const privateKey = inputRef.current?.value
-    console.log(privateKey)
-    if(privateKey){
-      dispatch(setPrivateKey(privateKey))
+    const encryptPublicKey = inputRef.current?.value
+    console.log(encryptPublicKey)
+    if(encryptPublicKey){
+      dispatch(setGuestKey(encryptPublicKey))
     }
     handleClose()
   }
@@ -90,6 +90,38 @@ export const ChatThreadToolbar: FC<ChatThreadToolbarProps> = (props) => {
       }}
       {...other}
     >
+      <Modal
+        open={openModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={
+          {
+            position: 'absolute' as 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+          }
+        }>
+          <Typography id="modal-modal-title"
+            variant="h6"
+            component="h2">
+            Need Encrypt Public Key
+          </Typography>
+          <Typography id="modal-modal-description"
+            sx={{ mt: 2 }}>
+          </Typography>
+          <Input placeholder="Encrypt Public key"
+            inputRef={inputRef} />
+          <Button onClick={onConfirmAddPrivateKey}>Confirm</Button>
+        </Box>
+      </Modal>
       <Box
         sx={{
           alignItems: 'center',
@@ -134,7 +166,7 @@ export const ChatThreadToolbar: FC<ChatThreadToolbarProps> = (props) => {
         </Box>
       </Box>
       <Box sx={{ flexGrow: 1 }} />
-      <Button onClick={handleOpen}>Decrypt</Button>
+      <Button onClick={handleOpen}>Encrypt Message</Button>
       <IconButton >
         <PhoneIcon fontSize="small" />
       </IconButton>

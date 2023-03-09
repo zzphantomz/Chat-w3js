@@ -52,7 +52,8 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
     if(data){
       const participantsID = threadKey.split('to')
       const dataOneGuestMessenger = data.find((message:any) => message.attributes.authorId !== userWallet?.get('ethAddress'))
-      const dataOneAuthorMessenger = data.find((message:any) => message.attributes.authorId !== userWallet?.get('ethAddress'))
+      const dataOneAuthorMessenger = data.find((message:any) => message.attributes.authorId === userWallet?.get('ethAddress'))
+      console.log(dataOneGuestMessenger, dataOneAuthorMessenger, data)
       if (dataOneGuestMessenger){
         const guestPublicKey = dataOneGuestMessenger.attributes.authorPublicKey
         const authorPublicKey = dataOneGuestMessenger.attributes.guestPublicKey
@@ -158,19 +159,21 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
     if (!destination) return
     console.log(guestKey)
     // const encrypted = await EthCrypto.encryptWithPublicKey('0xd220e0e316807d263c94ccbac6ffee1cf078422f',body);
-    const encryptedMessage = stringifiableToHex(
-      encrypt(
-        guestKey,
-        { data: body },
-        'x25519-xsalsa20-poly1305',
-      ),
-    );
+
+
 
     try {
+      const encryptedMessage = stringifiableToHex(
+        encrypt(
+          guestKey,
+          { data: body },
+          'x25519-xsalsa20-poly1305',
+        ),
+      );
       const Messages = Moralis.Object.extend('Messenger')
       const messages = new Messages()
       messages.save({
-        message: JSON.stringify(encryptedMessage),
+        message: encryptedMessage,
         attachments: [],
         contentType: 'text',
         createdAt: Date.now(),
