@@ -39,13 +39,21 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
   const publicKey = useSelector((state: RootState) => state.keyEth.publicKey);
   const router = useRouter();
   const dispatch = useDispatch();
+  const [count, setCount] = useState(0);
   const [thread, setThread] = useState<Thread | undefined>(undefined);
-  const {data} = useMoralisQuery('Messenger', (query) => {
+  const molarisQuery = useMoralisQuery('Messenger', (query) => {
     return query.ascending("createdAt").greaterThan("createdAt", new Date(Date.now()- 1000*60*60*24*7))
-  },[threadKey],{
+  },[threadKey,count],{
     live:true
   })
+  const data =  molarisQuery.data
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCount(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [threadKey]);
 
   useEffect(() => {
 
