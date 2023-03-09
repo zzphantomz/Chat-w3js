@@ -15,6 +15,11 @@ import lodash from 'lodash'
 import EthCrypto from 'eth-crypto';
 import {useDispatch, useSelector} from "react-redux";
 import {setGuestKey, setPublicKey} from "../../../slices/keyEth";
+import { ethers } from 'ethers';
+import {
+  encrypt,
+
+} from 'eth-sig-util';
 
 interface ChatThreadProps {
   threadKey: string;
@@ -142,6 +147,9 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
     [thread]
   );
 
+  const stringifiableToHex =(value:any) => {
+    return ethers.utils.hexlify(Buffer.from(JSON.stringify(value)));
+  }
   // If we have the thread, we use its ID to add a new message
   // Otherwise we use the recipients IDs. When using participant IDs, it means that we have to
   // get the thread.
@@ -150,8 +158,13 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
     if (!destination) return
     console.log(guestKey)
     // const encrypted = await EthCrypto.encryptWithPublicKey('0xd220e0e316807d263c94ccbac6ffee1cf078422f',body);
-    const encryptedMessage = await EthCrypto.encryptWithPublicKey(guestKey, body);
-
+    const encryptedMessage = stringifiableToHex(
+      encrypt(
+        guestKey,
+        { data: body },
+        'x25519-xsalsa20-poly1305',
+      ),
+    );
 
     try {
       const Messages = Moralis.Object.extend('Messenger')

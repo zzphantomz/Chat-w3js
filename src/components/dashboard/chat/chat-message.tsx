@@ -6,6 +6,7 @@ import { Avatar, Box, Card, CardMedia, Link, Typography } from '@mui/material';
 import EthCrypto from "eth-crypto";
 import {useSelector} from "react-redux";
 import {RootState} from "../../../store";
+import {useMoralis} from "react-moralis";
 
 type AuthorType = 'contact' | 'user';
 
@@ -21,6 +22,7 @@ interface ChatMessageProps {
 export const ChatMessage: FC<ChatMessageProps> = (props) => {
   const { body, contentType, createdAt, authorAvatar, authorName, authorType, ...other } = props;
   const [message, setMessage] = useState<string>('');
+  const {user} = useMoralis();
   const privateKey = useSelector((state: RootState) => state.keyEth.privateKey);
   const [expandMedia, setExpandMedia] = useState<boolean>(false);
   const decryptMess = async (message:any) => {
@@ -28,19 +30,24 @@ export const ChatMessage: FC<ChatMessageProps> = (props) => {
   }
 
   useEffect(() => {
-    const data = JSON.parse(body)
     if (authorName === 'Me') {
 
     }
     if (!privateKey||authorName === 'Me') {
-      setMessage(data?.ephemPublicKey.substring(0, 50))
+      setMessage(body.substring(0, 50))
       return
     }
-    decryptMess(data).then((mess) => {
-      setMessage(mess)
-    })
 
   },[body, privateKey])
+
+  const onDecryptCipher = async() => {
+    const textDisplay = await window?.ethereum?.request({
+      method: 'eth_decrypt',
+      params: [body, user?.get('ethAddress')],
+    }) as string;
+
+    setMessage(textDisplay??'')
+  }
 
   return (
     <Box
@@ -96,12 +103,15 @@ export const ChatMessage: FC<ChatMessageProps> = (props) => {
                 />
               )
               : (
-                <Typography
-                  color="inherit"
-                  variant="body1"
-                >
-                  {message}
-                </Typography>
+                <Box onClick={onDecryptCipher}>
+                  <Typography
+                    color="inherit"
+                    variant="body1"
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    {message}
+                  </Typography>
+                </Box>
               )
           }
         </Card>

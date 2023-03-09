@@ -20,6 +20,12 @@ import lodash from "lodash";
 import {useDispatch} from "react-redux";
 import {setPublicKey} from "../../../slices/keyEth";
 import EthCrypto from "eth-crypto";
+import { MetaMaskInpageProvider } from "@metamask/providers";
+declare global {
+  interface Window{
+    ethereum?:MetaMaskInpageProvider
+  }
+}
 
 interface ChatSidebarProps {
   containerRef?: MutableRefObject<HTMLDivElement | null>;
@@ -208,13 +214,19 @@ export const ChatSidebar: FC<ChatSidebarProps> = (props) => {
 
 
   const handleGroupClick = (): void => {
-    const publicKey1 = EthCrypto.publicKeyByPrivateKey(
-      '479f8520edf1af4046afd5164a26fd81182ff31f4f3c5f8c59a1634349644835'
-    );
+
     if (publicKey) {
       router.push('/dashboard/chat?compose=true')
     } else {
-      setOpenModal(true)
+      window?.ethereum?.request({
+        method: 'eth_getEncryptionPublicKey',
+        params: [userWallet?.get('ethAddress')],
+      }).then((publicKey: any) => {
+        dispatch(setPublicKey(publicKey))
+        router.push('/dashboard/chat?compose=true')
+      }).catch((err: any) => {
+        console.log(err)
+      })
 
     }
     if (!mdUp) {
