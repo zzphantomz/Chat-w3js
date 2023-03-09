@@ -80,7 +80,7 @@ export const ChatThread: FC<ChatThreadProps> = (props) => {
 
       const filterMessages = messages.filter((message:Message) => {
         if (!message.participants) return false
-        return message.participants.includes(participantsID[1])&&message.participants.includes(participantsID[0])
+        return message.participants.includes(participantsID[1]?.toLowerCase())&&message.participants.includes(participantsID[0]?.toLowerCase())
       })
       console.log(filterMessages)
 

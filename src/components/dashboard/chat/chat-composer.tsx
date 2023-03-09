@@ -42,7 +42,7 @@ export const ChatComposer: FC<ChatComposerProps> = (props) => {
       const Messages = Moralis.Object.extend('Contacts')
       let threadId = user?.get('ethAddress')
       recipients.forEach((recipient) => {
-        threadId += ('to' + recipient.id)})
+        threadId += ('to' + recipient.id.toLowerCase())})
       const messages = new Messages()
       messages.save({
         threadID: threadId,
